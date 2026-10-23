@@ -1,6 +1,7 @@
 # Support YouNeek YouNiverse readers
 
 **Audience:** YouNeek Studios support team  
+
 **Document type:** Customer-support procedure
 
 Use this guide to help readers subscribe, investigate access and reading problems, and route cancellation requests. It also covers missing newsletter downloads, which follow a separate delivery process. Each procedure ends with a resolution check or a handoff to the person who can investigate further.

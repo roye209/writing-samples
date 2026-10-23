@@ -1,7 +1,9 @@
 # Run WatchScore locally
 
 **Audience:** developers evaluating or contributing to WatchScore. For how the score itself works, see [How WatchScore turns audience comments into a score](01-how-watchscore-works.md). For endpoint details, see the [WatchScore API reference](04-watchscore-api-reference.md).
+
 **Time:** about 20 minutes, plus however long it takes to get the API keys.
+
 **Result:** the full app running at `http://localhost:3100` against its own local database, with no connection to production data.
 
 > [!NOTE]

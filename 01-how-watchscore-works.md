@@ -1,6 +1,7 @@
 # How WatchScore turns audience comments into a score
 
 **Audience:** anyone who wants to know what a WatchScore means, from curious viewers to developers working on the scoring code.
+
 **Reading time:** about 7 minutes.
 
 A WatchScore is a number from 0 to 100 that summarizes what real viewers are saying about a movie or show. It isn't a professional critic's score, a star average or a count of positive words. It's built from what ordinary viewers say: WatchScore reads the conversation and measures what people praise, what they complain about, and how much they agree.
