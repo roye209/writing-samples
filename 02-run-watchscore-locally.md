@@ -1,31 +1,45 @@
 # Run WatchScore locally
 
-**Audience:** developers evaluating or contributing to WatchScore. For how the score itself works, see [How WatchScore turns audience comments into a score](01-how-watchscore-works.md).
+**Audience:** developers evaluating or contributing to WatchScore. For how the score itself works, see [How WatchScore turns audience comments into a score](01-how-watchscore-works.md). For endpoint details, see the [WatchScore API reference](04-watchscore-api-reference.md).
 **Time:** about 20 minutes, plus however long it takes to get the API keys.
 **Result:** the full app running at `http://localhost:3100` against its own local database, with no connection to production data.
 
-WatchScore ([watchscore.tv](https://watchscore.tv)) helps people decide what to watch by reading what real viewers say about a movie or show, not just what critics say. It collects audience comments from several sources and uses Claude to turn them into a 0–100 score with the main pros and cons. This guide shows you how to run your own copy.
+> [!NOTE]
+> The WatchScore source code is private. This guide is written for collaborators with repository access.
+
+WatchScore ([watchscore.tv](https://watchscore.tv)) helps people decide what to watch by reading what real viewers say about a movie or show, not just what critics say. It collects audience comments from several sources and uses Claude to turn them into a 0–100 score. This guide shows you how to run your own copy.
 
 ## How the pieces fit together
 
-| Piece | What it does | Needed locally? |
+| Piece | What it does | Needed for |
 |---|---|---|
-| Next.js app | Web pages and API routes | Yes |
-| TMDB API | Titles, posters, search, trending data | **Required** |
-| Claude API | Reads audience comments to produce the WatchScore; turns plain-language requests into searches | **Required** for scores and Discover |
-| PostgreSQL | Stores computed scores, accounts, watchlists and discussions | **Required** for scores and accounts |
-| Audience sources (YouTube, Trakt, Bluesky, X, Tumblr, AniList) | Comments that feed the score | Optional. Each one adds data; any that aren't set are skipped |
-| OMDb, Watchmode | Critic scores and a trending signal | Optional |
+| Next.js app | Web pages and API routes | Everything |
+| TMDB API | Titles, posters, search, trending data | Everything |
+| PostgreSQL | Stores computed scores, accounts, watchlists and discussions | Scores and accounts |
+| Claude API | Reads audience comments to produce the WatchScore; turns plain-language requests into searches | Scores and Discover |
+| Voyage AI | Measures how similar comments are, so ones making the same point can be grouped | Scores |
+| YouTube, Trakt | Audience comments that feed the score | Scores |
+| Trakt, Watchmode | Trending signals | Trending |
+| Bluesky, X, Tumblr, AniList | More audience comments | Optional. Each one adds data; any that aren't set are skipped |
+| OMDb | Critic scores | Optional |
 | Redis (Upstash) | Cache in front of the database and sources | Optional. Without it, every request is computed fresh |
 
 ## Before you start
 
 You need:
-- Node.js 20 or later (tested with Node 26) and npm;
-- PostgreSQL 14 or later, with `initdb`, `pg_ctl`, `createdb` and `psql` on your PATH (on macOS, `brew install postgresql`);
-- Git;
-- a TMDB API key ([themoviedb.org](https://www.themoviedb.org/settings/api), free);
-- an Anthropic API key ([console.anthropic.com](https://console.anthropic.com)). Computing one score costs a few cents.
+- Node.js 20.9 or later, and npm
+- PostgreSQL, with `initdb`, `pg_ctl`, `createdb` and `psql` on your PATH (on macOS, `brew install postgresql`)
+- Git and access to the WatchScore repository
+- these API keys:
+
+| Key | Needed for | Get it from |
+|---|---|---|
+| TMDB | Everything | [themoviedb.org](https://www.themoviedb.org/settings/api) (free) |
+| Anthropic (Claude) | Scores | [console.anthropic.com](https://console.anthropic.com). Computing one score costs a few cents |
+| Voyage AI | Scores | [voyageai.com](https://www.voyageai.com) (free allowance) |
+| YouTube Data API | Scores | Google |
+| Trakt | Scores and trending | Trakt |
+| Watchmode | Trending | Watchmode |
 
 ## Step 1: Get the code
 
@@ -71,28 +85,30 @@ You should see tables including `dimension_scores` and `composites` (the compute
 cp .env.local.example .env.local
 ```
 
-Open `.env.local` and set at least:
+Open `.env.local` and set:
 
 ```bash
+DATABASE_URL=postgres://postgres@localhost:54340/watchscore
 TMDB_API_KEY=your-tmdb-key
 ANTHROPIC_API_KEY=your-anthropic-key
-DATABASE_URL=postgres://postgres@localhost:54340/watchscore
+VOYAGE_API_KEY=your-voyage-key
+YOUTUBE_API_KEY=your-youtube-key
+TRAKT_CLIENT_ID=your-trakt-client-id
+WATCHMODE_API_KEY=your-watchmode-key
 ```
 
 `.env.local` is ignored by Git. Never commit it.
 
-> **Important:** if you're a project maintainer copying settings from the live deployment (for example with `vercel env pull`), the production `DATABASE_URL` and Redis settings come along with them. Replace them with your local values before you start the app, or your local copy will read and write production data.
+> [!WARNING]
+> If you're a project maintainer copying settings from the live deployment (for example with `vercel env pull`), the production `DATABASE_URL` and Redis settings come along with them. Replace them with your local values before you start the app, or your local copy will read and write production data.
 
 Optional settings and what they turn on:
 
 | Setting | Turns on |
 |---|---|
-| `YOUTUBE_API_KEY` | YouTube review comments |
-| `TRAKT_CLIENT_ID`, `TRAKT_CLIENT_SECRET` | Trakt comments |
 | `X_BEARER_TOKEN` | X posts (pay-per-use) |
 | `TUMBLR_API_KEY` | Tumblr posts |
 | `OMDB_API_KEY` | IMDb, Rotten Tomatoes and Metacritic scores |
-| `WATCHMODE_API_KEY` | An extra What's Hot ranking signal |
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Redis caching |
 | `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google sign-in |
 | `RESEND_API_KEY` | Email sign-in codes |
@@ -103,9 +119,13 @@ Bluesky and AniList need no key.
 
 ## Step 5: Start the app
 
+For the free checks in Step 6, start the app with the Claude key blanked:
+
 ```bash
-npx next dev -p 3100
+ANTHROPIC_API_KEY= npx next dev -p 3100
 ```
+
+When every score key is set, search and trending also start a few paid score calculations in the background. Blanking one key turns that off.
 
 Wait for `✓ Ready`, then open `http://localhost:3100`.
 
@@ -127,9 +147,15 @@ Expected: JSON starting with `{"results":[{"id":95396,"mediaType":"tv","title":"
 curl "http://localhost:3100/api/trending?mediaType=tv"
 ```
 
-Expected: a list of trending shows.
+Expected: a list of up to 25 trending shows.
 
-**3. A WatchScore is computed (paid, a few cents).**
+**3. A WatchScore is computed (paid, a few cents).** Stop the app with `Ctrl+C` and restart it with every key set:
+
+```bash
+npx next dev -p 3100
+```
+
+Then request a score:
 
 ```bash
 curl "http://localhost:3100/api/watchscore?tmdbId=95396&mediaType=tv&title=Severance&releaseDate=2022-02-17"
@@ -145,6 +171,8 @@ The first request for a title can take a minute, because it fetches comments fro
 - `sourceCounts` shows how many comments each source contributed. A source you didn't configure shows `0`.
 - `degradedSources` lists any source that failed during this request. Empty means every configured source responded.
 
+If `status` is anything other than `ready`, see the [API reference](04-watchscore-api-reference.md#get-a-watchscore).
+
 Then confirm the result was saved:
 
 ```bash
@@ -156,6 +184,8 @@ psql -h localhost -p 54340 -U postgres -d watchscore -c "select tmdb_id, media_t
 | Symptom | Cause | Fix |
 |---|---|---|
 | `/api/watchscore` returns HTTP 500, and the server log shows `authentication_error: invalid x-api-key` | The Anthropic key is wrong, expired or revoked | Create a new key in the Anthropic console and update `ANTHROPIC_API_KEY`. Restart the app |
+| `/api/watchscore` returns `{"error":"Missing required API keys"}` | One of the five score keys is missing: YouTube, TMDB, Trakt, Anthropic or Voyage | Add it (Step 4) and restart |
+| `/api/trending` returns `Missing required API keys (TMDB, Trakt, or Watchmode)` | One of those three keys is missing | Add it (Step 4) and restart |
 | `DATABASE_URL is not configured` in the server log | `DATABASE_URL` is missing from `.env.local` | Add it (Step 4) and restart |
 | `/api/trending` returns `mediaType must be 'movie' or 'tv'` | The request is missing the `mediaType` parameter | Add `?mediaType=tv` or `?mediaType=movie` |
 | Search returns no results or an error | TMDB key missing or invalid | Check `TMDB_API_KEY` |
@@ -173,4 +203,4 @@ To remove everything, also delete `~/watchscore-db` and `~/watchscore-db.log`.
 
 ---
 
-*Tested on macOS with Node 26.0.0 and PostgreSQL from Homebrew, 23 Oct 2026. Steps 1–5 (including a fresh clone and `npm install`) and the free checks in Step 6 passed. The paid WatchScore check was blocked by an expired local Claude key, which is the first troubleshooting row. It will be re-run with a valid key.*
+*Tested on macOS with Node 26.0.0 and PostgreSQL 16.14 from Homebrew, 23 Oct 2026. Steps 1–5 (including a fresh clone and `npm install`) and the free checks in Step 6 passed. The paid WatchScore check wasn't run locally: an expired Claude key blocked it, which is the first troubleshooting row. The expected output shown is from the live site.*

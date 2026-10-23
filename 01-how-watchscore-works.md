@@ -3,7 +3,7 @@
 **Audience:** anyone who wants to know what a WatchScore means, from curious viewers to developers working on the scoring code.
 **Reading time:** about 7 minutes.
 
-A WatchScore is a number from 0 to 100 that summarizes what real viewers are saying about a movie or show. It isn't a professional critic's score, a star average or a count of positive words. It comes from ordinary viewers: it reads the conversation and measures what people praise, what they complain about, and how much they agree.
+A WatchScore is a number from 0 to 100 that summarizes what real viewers are saying about a movie or show. It isn't a professional critic's score, a star average or a count of positive words. It's built from what ordinary viewers say: WatchScore reads the conversation and measures what people praise, what they complain about, and how much they agree.
 
 Think of it like a navigation app that works out traffic from thousands of drivers. No single driver decides the route, but enough of them together give a fair picture.
 
@@ -31,11 +31,11 @@ WatchScore pulls audience comments and reviews from up to seven sources: YouTube
 ### 2. Read each comment individually
 
 Claude reads every comment on its own and records three things:
-- **which critique areas it talks about**, from a fixed list of 15: pacing, character development, ending, writing, acting, visuals, emotional impact, humor, originality, tone, worldbuilding, franchise fidelity, rewatchability, consistency across a series, and thematic depth;
-- **how positive or negative it is** about each area, from 0 to 100;
-- **how confident** that reading is.
+- **Which critique areas it talks about**, from a fixed list of 15: pacing, character development, ending, writing, acting, visuals, emotional impact, humor, originality, tone, worldbuilding, franchise fidelity, rewatchability, consistency across a series, and thematic depth
+- **How positive or negative it is** about each area, from 0 to 100
+- **How confident** that reading is
 
-I drafted the first list of areas from my own experience creating comics and animation. Then I tested it against real conversation: I grouped thousands of comments across 84 varied titles to confirm these are the topics viewers actually talk about.
+The list was drafted from experience in comics and animation, then tested against real conversation: thousands of comments across 84 varied titles were grouped to confirm these are the topics viewers actually talk about.
 
 Reading comments one at a time, instead of asking a model for one overall verdict, matters for two reasons:
 - **It's explainable.** Every score can be traced back to the comments behind it. A single overall verdict can't be checked.
@@ -111,7 +111,21 @@ Results are cached so popular titles load instantly. Newer releases are refreshe
 
 ## Example: *Severance*
 
-On 23 October 2026, a fresh calculation for *Severance* drew on 110 comments: 93 from YouTube reviews, 14 from Bluesky and 3 TMDB reviews. Trakt, X and Tumblr returned nothing for this run. The result was a **WatchScore of 83**.
+On 23 October 2026, *Severance* had a **WatchScore of 83**. Its latest calculation drew on 110 comments: 93 from YouTube reviews, 14 from Bluesky and 3 TMDB reviews. Trakt, X and Tumblr returned nothing for that run.
+
+Here's how the steps above applied:
+- **Genre:** Sci-Fi/Fantasy, with the TV adjustments. Character development and worldbuilding both carry the full weight of 1.0.
+- **Areas left out:** ending, because the series is still airing, and franchise fidelity, because it isn't part of a franchise.
+- **Area scores:** a sample from that run.
+
+| Area | Score from this run | Genre weight |
+|---|---|---|
+| Acting | 89.3 | 0.5 |
+| Character development | 84.3 | 1.0 |
+| Worldbuilding | 78.3 | 1.0 |
+| Tone | 35, low confidence (one comment) | 0.6 |
+
+Each area's score from a new run is blended with its earlier runs before the genre weights are applied (see [Scores change as the conversation does](#scores-change-as-the-conversation-does)). That's why the final 83 can't be recalculated from one run's scores alone.
 
 ## Known limitations
 
