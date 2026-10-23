@@ -171,7 +171,7 @@ The first request for a title can take a minute, because it fetches comments fro
 
 - `watchScore` is the 0–100 audience score.
 - `sourceCounts` shows how many comments each source contributed. A source you didn't configure shows `0`.
-- `degradedSources` lists any source that failed during this request. Empty means every configured source responded.
+- `degradedSources` lists sources whose fetch failed during this request. Today only YouTube reports failures, so it's either empty or `["youtube"]`. Empty doesn't guarantee that the other sources responded. A source that failed shows the same `0` as one that found nothing.
 
 If `status` is anything other than `ready`, see the [API reference](04-watchscore-api-reference.md#get-a-watchscore).
 

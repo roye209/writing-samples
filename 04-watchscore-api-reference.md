@@ -43,7 +43,7 @@ If `q` is missing or empty, you get `200` with `{"results":[]}`, not an error.
 | `posterPath` | string or null | TMDB image path. Prefix it with a TMDB image base URL to display it. |
 | `watchScore` | number | Only present if the title already has a cached score |
 | `tooltipSummary` | string | Only with `watchScore`: the top positive and negative theme |
-| `degradedSources` | string[] | Only with `watchScore`, and only if a source failed during that calculation |
+| `degradedSources` | string[] | Only with `watchScore`, and only if YouTube failed during that calculation. Today YouTube is the only source that reports failures. |
 
 Titles that haven't been released yet never get `watchScore`.
 
@@ -148,7 +148,7 @@ Fields when `status` is `ready`:
 |---|---|---|
 | `watchScore` | number | The audience score, 0–100 |
 | `sourceCounts` | object | Number of comments used from each source: `youtube`, `tmdbReviews`, `trakt`, `bluesky`, `anilist`, `x`, `tumblr`. A source that isn't configured, or found nothing, shows `0`. |
-| `degradedSources` | string[] | Sources that failed during the calculation. Empty means every configured source responded. |
+| `degradedSources` | string[] | Sources whose fetch failed during the calculation. Today only YouTube reports failures, so the value is `[]` or `["youtube"]`. Other sources that fail show `0` in `sourceCounts`, the same as finding nothing. |
 
 ### Errors
 

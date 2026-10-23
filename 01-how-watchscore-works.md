@@ -39,8 +39,8 @@ Claude reads every comment on its own and records three things:
 The list was drafted from experience in comics and animation, then tested against real conversation: thousands of comments across 84 varied titles were grouped to confirm these are the topics viewers actually talk about.
 
 Reading comments one at a time, instead of asking a model for one overall verdict, matters for two reasons:
-- **It's explainable.** Every score can be traced back to the comments behind it. A single overall verdict can't be checked.
-- **It's repeatable.** Small judgments about individual comments are much more stable than one large judgment about a whole conversation.
+- **It's explainable.** Each area score is kept with the evidence behind it: how many comments and different commenters it rests on, and how they grouped. The comment text itself isn't kept permanently; only one-way hashes of each comment and commenter are stored, to avoid counting the same one twice. A single overall verdict would leave nothing to check.
+- **It's built to be repeatable.** Many small judgments about individual comments are designed to vary less than one large judgment about a whole conversation.
 
 Hype is tracked separately. "It didn't live up to the trailer" is about expectations, not quality, so it's recorded but not added to the score.
 
@@ -63,13 +63,15 @@ group weight = 1 + 3.5 × (1 − 1 / group size)
 | 5 comments | 3.8 |
 | Very large | approaches 4.5 |
 
-The first few comments that agree with each other do most of the work. That's the point where a lone opinion becomes a shared one. After that, extra volume adds less and less, so a single pile-on can't swamp everything else.
+The first few comments that agree with each other do most of the work. That's the point where a lone opinion becomes a shared one. After that, extra volume adds less and less. The cap applies to one group of comments making the same point, within one area, in one scoring run. It limits how much a single repeated point can count. It doesn't stop many different negative points from lowering a score, and it doesn't limit how evidence adds up across runs.
 
 ### 4. Score each critique area
 
 For each area, the groups' sentiment is averaged using these weights. Within a group, comments the model was more confident about count for more. The result is one score per area, for example Pacing 72 or Ending 58.
 
 An area backed by a single comment is still scored but flagged as low confidence, because one comment can't show agreement.
+
+To count toward the final WatchScore, an area also needs comments from **at least two different commenters**, counted across all runs. One long review often touches many areas at once. Without this rule, one prolific commenter could carry several areas alone.
 
 Some areas only apply to some titles. Franchise fidelity is only kept for titles that are part of a franchise, and series consistency only for sequels and serialized shows. Those decisions come from the title's metadata, not from the AI.
 
@@ -101,7 +103,7 @@ The average (61.23) comes from WatchScore's own scores, not from critic scores. 
 
 Review sites regularly see "review bombing": a small, vocal group floods a title with low ratings, often for reasons unrelated to the title itself. WatchScore has three defenses against it:
 - **One complaint is one area.** If a group dislikes a lead actor for something that happened off-screen, at most that affects one of the 15 areas, weighted for the genre. It can't sink pacing, writing, worldbuilding and everything else.
-- **Agreement is capped.** A pile-on counts for no more than about 4.5 times a single comment, however large it gets.
+- **Repetition is capped.** Within a scoring run, a group of comments making the same point counts for at most about 4.5 times a single comment, however large it gets. This limits one repeated complaint. It isn't a complete defense: many different negative points, or a pile-on that continues across runs, can still move the score.
 - **The reading is about the work.** An early version counted arguments about casting and representation as judgments of the acting. That was traced and fixed, so comments about the people involved, rather than their performances, no longer count toward the acting score.
 
 ## Scores change as the conversation does
@@ -132,9 +134,8 @@ Each area's score from a new run is blended with its earlier runs before the gen
 
 Opinions about stories are subjective, so no score is objective. WatchScore aims to be fair to what the whole audience is saying, and it works best with plenty of conversation to read.
 
-- **Low-volume titles are the weak spot.** A lesser-known show might only have a handful of comments. With so few, a loud minority can still move the score, because there's not enough agreement or disagreement to balance it.
+- **Low-volume titles are the weak spot.** A lesser-known show might only have a handful of comments. If there's too little evidence (fewer than 25 comments, or too few critique areas covered), WatchScore withholds the score rather than guess. Just above that line, a loud minority can still move the score, because there's not enough agreement or disagreement to balance it.
 - **Some big platforms aren't included yet.** Reddit and Facebook carry a lot of viewer discussion, but they aren't sources today, which leaves less volume for smaller titles.
-- **Grouping misses some agreement.** Testing showed that about 28% of comment pairs making the same point aren't grouped together. That's one reason the group weight has a ceiling: the system shouldn't lean hard on a signal it knows is incomplete.
 - **Coverage varies by source.** A title with most of its comments from one platform reflects that platform's audience more.
 - **Scores reflect people who comment.** People with strong opinions post more than people who quietly enjoyed something.
 - **It isn't calibrated against critics, on purpose.** A WatchScore that disagrees with critics isn't an error. It's the thing it was built to show.
