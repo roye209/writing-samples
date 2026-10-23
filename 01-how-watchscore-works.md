@@ -36,7 +36,7 @@ Claude reads every comment on its own and records three things:
 - **How positive or negative it is** about each area, from 0 to 100
 - **How confident** that reading is
 
-The list was drafted from experience in comics and animation, then tested against real conversation: thousands of comments across 84 varied titles were grouped to confirm these are the topics viewers actually talk about.
+The list was drafted from experience in film and TV, then tested against real conversation: thousands of comments across 84 varied titles were grouped to confirm these are the topics viewers actually talk about.
 
 Reading comments one at a time, instead of asking a model for one overall verdict, matters for two reasons:
 - **It's explainable.** Each area score is kept with the evidence behind it: how many comments and different commenters it rests on, and how they grouped. The comment text itself isn't kept permanently; only one-way hashes of each comment and commenter are stored, to avoid counting the same one twice. A single overall verdict would leave nothing to check.
